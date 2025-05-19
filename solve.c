@@ -8,50 +8,29 @@
 #define MAX_N 100
 
 void generate_game_matrix(int N, const char* difficulty[], int matrix[MAX_N][MAX_N], bool is_hider) {
-    if(is_hider){
-        for (int h = 0; h < N; h++) {
-            for (int s = 0; s < N; s++) {
-                if (h == s) {
-                    if (strcmp(difficulty[h], "hard") == 0)
-                        matrix[h][s] = -3;
-                    else if (strcmp(difficulty[h], "neutral") == 0)
-                        matrix[h][s] = -1;
-                    else if (strcmp(difficulty[h], "easy") == 0)
-                        matrix[h][s] = -1;
-                } else {
-                    if (strcmp(difficulty[h], "hard") == 0)
-                        matrix[h][s] = 1;
-                    else if (strcmp(difficulty[h], "neutral") == 0)
-                        matrix[h][s] = 1;
-                    else if (strcmp(difficulty[h], "easy") == 0)
-                        matrix[h][s] = 2;
-                }
-            }
-        }
-    }else{
-        for (int h = 0; h < N; h++) {
-            for (int s = 0; s < N; s++) {
-                if (h == s) {
-                    if (strcmp(difficulty[h], "hard") == 0)
-                        matrix[h][s] = 3;
-                    else if (strcmp(difficulty[h], "neutral") == 0)
-                        matrix[h][s] = 1;
-                    else if (strcmp(difficulty[h], "easy") == 0)
-                        matrix[h][s] = 1;
-                } else {
-                    if (strcmp(difficulty[h], "hard") == 0)
-                        matrix[h][s] = -1;
-                    else if (strcmp(difficulty[h], "neutral") == 0)
-                        matrix[h][s] = -1;
-                    else if (strcmp(difficulty[h], "easy") == 0)
-                        matrix[h][s] = -2;
-                }
+    const int sign[2] = {-1,1};
+    for (int h = 0; h < N; h++) {
+        for (int s = 0; s < N; s++) {
+            if (h == s) {
+                if (strcmp(difficulty[h], "hard") == 0)
+                    matrix[h][s] = -3 * sign[is_hider];
+                else if (strcmp(difficulty[h], "neutral") == 0)
+                    matrix[h][s] = -1 * sign[is_hider];
+                else if (strcmp(difficulty[h], "easy") == 0)
+                    matrix[h][s] = -1 * sign[is_hider];
+            } else {
+                if (strcmp(difficulty[h], "hard") == 0)
+                    matrix[h][s] = 1 * sign[is_hider];
+                else if (strcmp(difficulty[h], "neutral") == 0)
+                    matrix[h][s] = 1 * sign[is_hider];
+                else if (strcmp(difficulty[h], "easy") == 0)
+                    matrix[h][s] = 2 * sign[is_hider];
             }
         }
     }
 }
 
-double* probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
+double* seeker_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     glp_prob *lp;
     lp = glp_create_prob();
     glp_set_obj_dir(lp, GLP_MAX);
@@ -114,7 +93,7 @@ double* probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     }
 
     double v = glp_get_obj_val(lp);
-    printf("\nOptimal hider game value: %f\n", v);
+    printf("\nOptimal game value for the seeker: %f\n", v);
 
     // Allocate memory for the probabilities
     double* probabilities = (double*)malloc(N * sizeof(double));
@@ -123,7 +102,7 @@ double* probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
         exit(1);
     }
 
-    printf("Hider strategy probabilities:\n");
+    printf("Strategy probabilities:\n");
     for (int i = 1; i <= N; i++) {
         probabilities[i - 1] = glp_get_col_prim(lp, i);
         printf("Place %d: %.3f\n", i - 1, probabilities[i - 1]);
@@ -133,7 +112,7 @@ double* probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     return probabilities;
 }
 
-double* probability_calculate_dual(int N, int matrix[MAX_N][MAX_N]) {
+double* hider_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     glp_prob *lp = glp_create_prob();
     glp_set_obj_dir(lp, GLP_MIN); // Seeker minimizes game value
 
@@ -183,10 +162,15 @@ double* probability_calculate_dual(int N, int matrix[MAX_N][MAX_N]) {
         exit(1);
     }
     double v = glp_get_obj_val(lp);
-    printf("\nOptimal seeker game value: %f\n", v);
+    printf("\nOptimal game value for the hider: %f\n", v);
 
     double* probabilities = malloc(N * sizeof(double));
-    printf("Seeker strategy probabilities:\n");
+    if (probabilities == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    
+    printf("Strategy probabilities:\n");
     for (int j = 1; j <= N; j++) {
         probabilities[j - 1] = glp_get_col_prim(lp, j);
         printf("Place %d: %.3f\n", j - 1, probabilities[j - 1]);
@@ -196,10 +180,18 @@ double* probability_calculate_dual(int N, int matrix[MAX_N][MAX_N]) {
     return probabilities;
 }
 
-
-
-
 int computer_turn(int N, double* probabilities) {
+    // Check if probabilities sum to zero
+    double sum = 0.0;
+    for (int i = 0; i < N; i++) {
+        sum += probabilities[i];
+    }
+    
+    if (sum <= 0.0) {
+        // If all probabilities are zero, choose randomly
+        return rand() % N;
+    }
+    
     // Generate a random number between 0 and 1
     double random_value = (double)rand() / RAND_MAX;
     double cumulative_probability = 0.0;
@@ -215,7 +207,6 @@ int computer_turn(int N, double* probabilities) {
     // Fallback (should rarely happen due to floating point precision)
     return N - 1;
 }
-
 
 void simulate(int N, const char* difficulty[]) {
     int matrix_hider[MAX_N][MAX_N];
@@ -242,8 +233,8 @@ void simulate(int N, const char* difficulty[]) {
     }
     
     // Calculate optimal strategies
-    double* hider_probs = probability_calculate(N, matrix_hider);
-    double* seeker_probs = probability_calculate_dual(N, matrix_hider);
+    double* seeker_probs = seeker_probability_calculate(N, matrix_hider);
+    double* hider_probs = hider_probability_calculate(N, matrix_hider);
     
     printf("\nStarting %d round simulation...\n", rounds);
     printf("------------------------------------\n");
@@ -335,16 +326,19 @@ void simulate(int N, const char* difficulty[]) {
     free(seeker_probs);
 }
 
-
-
 int main() {
     // Seed the random number generator
     srand(time(NULL));
     
-    int N = 3;
-    const char* difficulty[] = {"neutral", "easy", "hard"};
-    
-    // Run the simulation
+    int N = 30;
+    const char* difficulty[] = {"hard", "easy", "neutral", "hard", "easy", "neutral", 
+                                "hard", "easy",  "neutral","easy", "hard", "neutral",
+                                "hard", "easy", "neutral", "hard", "easy", "neutral",
+                                "hard", "easy", "neutral", "hard", "easy", "neutral",
+                                "hard", "easy", "neutral", "hard", "easy", "neutral"};
+
+    // Run the standard simulation
+    printf("\n\n===== RUNNING STANDARD SIMULATION =====\n");
     simulate(N, difficulty);
     
     return 0;
