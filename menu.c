@@ -1,23 +1,47 @@
 #include "menu.h"
+#include "solve.h"
 
-// Define global variables
+// 1 for interactive 0 for simulted
+//1 for hide,  0 for seek
 int firstMenu = 1, activeOrSimulated = 1, hideOrSeek = 1, inputActive = 0, letterCount = 0;
 char worldSizeInput[MAX_INPUT_CHARS + 1] = "\0";
+
+
 int sizeOfWorld = 0;
-int *theWorld = NULL;
+const char** theWorld = NULL;
+int gameMatrix[MAX_N][MAX_N];
+double* hiderProbs = NULL;
+double* seekerProbs = NULL;
+
 Color darkBrown = {121, 85, 61, 255};
 
-Rectangle inputBox = { 300, 270, 200, 40 };
-Rectangle startButton = { 350, 340, 100, 40 };
-Rectangle active = { 250, 50, 140, 50 };
-Rectangle Simulated = { 430, 50, 140, 50 };
-Rectangle hideChoose = {260, 140, 120, 50};
-Rectangle seekChoose = {440, 140, 120, 50};
+
+    Rectangle inputBox;
+    Rectangle startButton ;
+    Rectangle active ;
+    Rectangle Simulated ;
+    Rectangle hideChoose ;
+    Rectangle seekChoose ;
+
 
 Texture2D mainMenuBackGround;
 
-void menuInit() {
+void menuInit(int screenWidth, int screenHeight) {
     mainMenuBackGround = LoadTexture("resources/MainMenuBackGround.png");
+
+    // Centered horizontally, positioned vertically relative to screen height
+    float centerX = screenWidth / 2.0f;
+    float inputBoxWidth = 200, inputBoxHeight = 40;
+    float buttonWidth = 100, buttonHeight = 40;
+    float modeButtonWidth = 140, modeButtonHeight = 50;
+    float chooseButtonWidth = 120, chooseButtonHeight = 50;
+
+     inputBox = (Rectangle){ centerX - inputBoxWidth/2, screenHeight * 0.45f, inputBoxWidth, inputBoxHeight };
+     startButton = (Rectangle){ centerX - buttonWidth/2, screenHeight * 0.55f, buttonWidth, buttonHeight };
+     active = (Rectangle){ centerX - modeButtonWidth - 10, screenHeight * 0.15f, modeButtonWidth, modeButtonHeight };
+     Simulated = (Rectangle){ centerX + 10, screenHeight * 0.15f, modeButtonWidth, modeButtonHeight };
+     hideChoose = (Rectangle){ centerX - chooseButtonWidth - 10, screenHeight * 0.30f, chooseButtonWidth, chooseButtonHeight };
+     seekChoose = (Rectangle){ centerX + 10, screenHeight * 0.30f, chooseButtonWidth, chooseButtonHeight };
 }
 
 void showFirstMenu(int screenWidth, int screenHeight)
@@ -34,15 +58,23 @@ void showFirstMenu(int screenWidth, int screenHeight)
                 sizeOfWorld = atoi(worldSizeInput);
                 if (sizeOfWorld > 0)
                 {
-                    theWorld = (int*)malloc(sizeOfWorld * sizeof(int));
-                    memset(theWorld, 0, sizeOfWorld * sizeof(int));
-                    firstMenu = 0;
-
+                    char* difficulty[] = {"neutral", "easy", "hard"};
+                    // Allocate memory for theWorld
+                    if (theWorld) free(theWorld); // free previous if any
+                    theWorld = malloc(sizeOfWorld * sizeof(const char*));
+                    srand(time(NULL));
                     for(int i = 0; i < sizeOfWorld; i++){
-                        theWorld[i] = (rand() %5) - 2;
+                        int r = rand() %3;
+                        theWorld[i] = difficulty[r];
                     }
+                    
+                    generate_game_matrix(sizeOfWorld, theWorld, gameMatrix, true);
 
-                    guiInit();
+                    hiderProbs = hider_probability_calculate(sizeOfWorld, gameMatrix);
+                    seekerProbs = seeker_probability_calculate(sizeOfWorld, gameMatrix);
+
+                    guiInit(screenWidth, screenHeight);
+                    firstMenu = 0;
                 }
             }
         }else if(CheckCollisionPointRec(mouse, active)){

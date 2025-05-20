@@ -3,6 +3,7 @@
 
 
 #include "raylib.h"
+#include "solve.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,9 +17,11 @@ extern int inputActive;
 extern int letterCount;
 extern char worldSizeInput[];
 extern int sizeOfWorld;
-extern int *theWorld;
+extern const char** theWorld;
 extern Color darkBrown;
-
+extern int gameMatrix[MAX_N][MAX_N];
+extern double* hiderProbs ;
+extern double* seekerProbs;
 // Input boxes and buttons
 extern Rectangle inputBox;
 extern Rectangle startButton;
@@ -33,7 +36,7 @@ extern Texture2D mainMenuBackGround;
 
 //menu function
 void DrawModernButton(Rectangle bounds, const char *text, bool hovered, Color baseColor);
-void menuInit();
+void menuInit(int screenWidth, int screenHeight);
 void showFirstMenu(int screenWidth, int screenHeight);
 
 #endif

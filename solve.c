@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <glpk.h>
 #include <time.h>
+#include "solve.h"
 
 #define MAX_N 100
 
@@ -326,20 +327,20 @@ void simulate(int N, const char* difficulty[]) {
     free(seeker_probs);
 }
 
-int main() {
-    // Seed the random number generator
-    srand(time(NULL));
+// int main() {
+//     // Seed the random number generator
+//     srand(time(NULL));
     
-    int N = 30;
-    const char* difficulty[] = {"hard", "easy", "neutral", "hard", "easy", "neutral", 
-                                "hard", "easy",  "neutral","easy", "hard", "neutral",
-                                "hard", "easy", "neutral", "hard", "easy", "neutral",
-                                "hard", "easy", "neutral", "hard", "easy", "neutral",
-                                "hard", "easy", "neutral", "hard", "easy", "neutral"};
+//     int N = 30;
+//     const char* difficulty[] = {"hard", "easy", "neutral", "hard", "easy", "neutral", 
+//                                 "hard", "easy",  "neutral","easy", "hard", "neutral",
+//                                 "hard", "easy", "neutral", "hard", "easy", "neutral",
+//                                 "hard", "easy", "neutral", "hard", "easy", "neutral",
+//                                 "hard", "easy", "neutral", "hard", "easy", "neutral"};
 
-    // Run the standard simulation
-    printf("\n\n===== RUNNING STANDARD SIMULATION =====\n");
-    simulate(N, difficulty);
+//     // Run the standard simulation
+//     printf("\n\n===== RUNNING STANDARD SIMULATION =====\n");
+//     simulate(N, difficulty);
     
-    return 0;
-}
+//     return 0;
+// }

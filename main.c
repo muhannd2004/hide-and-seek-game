@@ -26,8 +26,10 @@ int main(void)
          runGame(screenWidth, screenHeight);
     
         }else if (!activeOrSimulated)
-        {
-                
+        {   
+             BeginDrawing();
+                DrawText("Simulation Mode", screenWidth/2 - MeasureText("Simulation Mode", 20)/2, 10, 25, DARKGRAY);
+            EndDrawing();
         }
         
     }
