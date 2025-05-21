@@ -92,6 +92,33 @@ void showFirstMenu(int screenWidth, int screenHeight)
             inputActive = 0;
     }
 
+    if (IsKeyDown(KEY_ENTER) && inputActive){
+            if (strlen(worldSizeInput) > 0)
+            {
+                sizeOfWorld = atoi(worldSizeInput);
+                if (sizeOfWorld > 0)
+                {
+                    char* difficulty[] = {"neutral", "easy", "hard"};
+                    // Allocate memory for theWorld
+                    if (theWorld) free(theWorld); // free previous if any
+                    theWorld = malloc(sizeOfWorld * sizeof(const char*));
+                    srand(time(NULL));
+                    for(int i = 0; i < sizeOfWorld; i++){
+                        int r = rand() %3;
+                        theWorld[i] = difficulty[r];
+                    }
+                    
+                    generate_game_matrix(sizeOfWorld, theWorld, gameMatrix, true);
+
+                    hiderProbs = hider_probability_calculate(sizeOfWorld, gameMatrix);
+                    seekerProbs = seeker_probability_calculate(sizeOfWorld, gameMatrix);
+
+                    guiInit(screenWidth, screenHeight);
+                    firstMenu = 0;
+                }
+            }
+        }
+
     // takes the char input
     int key = GetCharPressed();
     while (key > 0)
