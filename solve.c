@@ -6,7 +6,19 @@
 #include <time.h>
 #include "solve.h"
 
-#define MAX_N 100
+
+
+
+
+void difficulty_create(int N, const char* difficulty[]){
+    // Function to randomly assign difficulty levels
+    const char* levels[] = {"easy", "neutral", "hard"};
+    for (int i = 0; i < N; i++) {
+        // Randomly select one of the three difficulty levels
+        int random_index = rand() % 3;
+        difficulty[i] = levels[random_index];
+    }
+}
 
 void generate_game_matrix(int N, const char* difficulty[], int matrix[MAX_N][MAX_N], bool is_hider) {
     const int sign[2] = {-1,1};
@@ -209,138 +221,3 @@ int computer_turn(int N, double* probabilities) {
     return N - 1;
 }
 
-void simulate(int N, const char* difficulty[]) {
-    int matrix_hider[MAX_N][MAX_N];
-    int matrix_seeker[MAX_N][MAX_N];
-    int hider_score = 0, seeker_score = 0;
-    int rounds = 100;
-    
-    // Generate game matrices for both perspectives
-    generate_game_matrix(N, difficulty, matrix_hider, true);  // Hider's perspective
-    generate_game_matrix(N, difficulty, matrix_seeker, false); // Seeker's perspective
-    
-    printf("Hider's Game Matrix:\n");
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++)
-            printf("%3d ", matrix_hider[i][j]);
-        printf("\n");
-    }
-    
-    printf("\nSeeker's Game Matrix:\n");
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++)
-            printf("%3d ", matrix_seeker[i][j]);
-        printf("\n");
-    }
-    
-    // Calculate optimal strategies
-    double* seeker_probs = seeker_probability_calculate(N, matrix_hider);
-    double* hider_probs = hider_probability_calculate(N, matrix_hider);
-    
-    printf("\nStarting %d round simulation...\n", rounds);
-    printf("------------------------------------\n");
-    
-    for (int round = 1; round <= rounds; round++) {
-        // Get moves for both players based on their optimal probabilities
-        int hider_place = computer_turn(N, hider_probs);
-        int seeker_place = computer_turn(N, seeker_probs);
-        
-        // Determine outcome and scores
-        int round_score = matrix_hider[hider_place][seeker_place];
-        
-        if (hider_place == seeker_place) {
-            // Seeker found the hider
-            seeker_score += matrix_seeker[hider_place][seeker_place];
-            hider_score -= matrix_seeker[hider_place][seeker_place];
-            
-            printf("Round %3d: Hider chose place %d, Seeker chose place %d - Seeker wins! (Score: %+d)\n", 
-                   round, hider_place, seeker_place, matrix_seeker[hider_place][seeker_place]);
-        } else {
-            // Hider escaped
-            hider_score += matrix_hider[hider_place][seeker_place];
-            seeker_score -= matrix_hider[hider_place][seeker_place];
-            
-            printf("Round %3d: Hider chose place %d, Seeker chose place %d - Hider wins! (Score: %+d)\n", 
-                   round, hider_place, seeker_place, matrix_hider[hider_place][seeker_place]);
-        }
-    }
-    
-    printf("\nSimulation Results:\n");
-    printf("------------------------------------\n");
-    printf("Total rounds: %d\n", rounds);
-    printf("Hider's final score: %d (avg per round: %.2f)\n", 
-           hider_score, (float)hider_score / rounds);
-    printf("Seeker's final score: %d (avg per round: %.2f)\n", 
-           seeker_score, (float)seeker_score / rounds);
-    
-    if (hider_score > seeker_score) {
-        printf("Overall winner: Hider\n");
-    } else if (seeker_score > hider_score) {
-        printf("Overall winner: Seeker\n");
-    } else {
-        printf("The game ended in a tie\n");
-    }
-    
-    // Distribution analysis
-    int hider_distribution[MAX_N] = {0};
-    int seeker_distribution[MAX_N] = {0};
-    
-    // Reset random seed for consistent analysis
-    srand(time(NULL));
-    
-    for (int i = 0; i < 1000; i++) {
-        hider_distribution[computer_turn(N, hider_probs)]++;
-        seeker_distribution[computer_turn(N, seeker_probs)]++;
-    }
-    
-    printf("\nMove Distribution Analysis (1000 simulated choices):\n");
-    printf("------------------------------------\n");
-    
-    printf("Hider's move distribution:\n");
-    for (int i = 0; i < N; i++) {
-        printf("Place %d: %d times (%.1f%%) - Expected: %.1f%%\n", 
-               i, hider_distribution[i], 
-               (float)hider_distribution[i] / 10.0,
-               hider_probs[i] * 100);
-    }
-    
-    printf("\nSeeker's move distribution:\n");
-    for (int i = 0; i < N; i++) {
-        printf("Place %d: %d times (%.1f%%) - Expected: %.1f%%\n", 
-               i, seeker_distribution[i], 
-               (float)seeker_distribution[i] / 10.0,
-               seeker_probs[i] * 100);
-    }
-    
-    // Calculate expected game value
-    double expected_value = 0.0;
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            expected_value += hider_probs[i] * seeker_probs[j] * matrix_hider[i][j];
-        }
-    }
-    printf("\nTheoretical expected value per round: %.3f\n", expected_value);
-    printf("Actual average value per round: %.3f\n", (float)hider_score / rounds);
-    
-    // Free allocated memory
-    free(hider_probs);
-    free(seeker_probs);
-}
-
-// int main() {
-//     // Seed the random number generator
-//     srand(time(NULL));
-    
-//     int N = 30;
-//     const char* difficulty[] = {"hard", "easy", "neutral", "hard", "easy", "neutral", 
-//                                 "hard", "easy",  "neutral","easy", "hard", "neutral",
-//                                 "hard", "easy", "neutral", "hard", "easy", "neutral",
-//                                 "hard", "easy", "neutral", "hard", "easy", "neutral",
-//                                 "hard", "easy", "neutral", "hard", "easy", "neutral"};
-
-//     // Run the standard simulation
-//     printf("\n\n===== RUNNING STANDARD SIMULATION =====\n");
-//     simulate(N, difficulty);
-    
-//     return 0;
-// }

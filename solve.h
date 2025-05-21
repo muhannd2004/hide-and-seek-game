@@ -43,11 +43,5 @@ double* hider_probability_calculate(int N, int matrix[MAX_N][MAX_N]);
  */
 int computer_turn(int N, double* probabilities);
 
-/**
- * Run a simulation of the hide and seek game
- * @param N Number of hiding places
- * @param difficulty Array of difficulty strings for each place
- */
-void simulate(int N, const char* difficulty[]);
 
 #endif /* SOLVE_H */
