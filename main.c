@@ -1,8 +1,9 @@
 #include "menu.h"
 #include "gui.h"
 #include "solve.h"
-// gcc main.c menu.c gui.c -o out -lraylib -lm -lpthread -ldl -lrt -lGL -lX11 -lGLU && ./out
-
+#include "simulate.h"
+#include <time.h>
+// gcc main.c menu.c gui.c simulate.c solve.c -o out -lraylib -lm -lpthread -ldl -lrt -lGL -lX11 -lGLU -lglpk && ./out
 int main(void)
 {
 
@@ -26,12 +27,14 @@ int main(void)
          runGame(screenWidth, screenHeight);
     
         }else if (!activeOrSimulated)
-        {   
-             BeginDrawing();
-                DrawText("Simulation Mode", screenWidth/2 - MeasureText("Simulation Mode", 20)/2, 10, 25, DARKGRAY);
-            EndDrawing();
+        {
+            int N = sizeOfWorld; // Use the world size from menu or gui
+            const char* difficulty[MAX_N];
+            srand(time(NULL)); // Seed the random number generator
+            difficulty_create(N, difficulty); // Generate random difficulties
+            
+            simulate(N, difficulty);    
         }
-        
     }
     return 0;
 }
