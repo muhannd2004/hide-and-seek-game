@@ -424,17 +424,38 @@ void nextRound()
     if (hiderGridChoice == -1 || seekerGridChoice == -1)
         return;
 
-    int getScore = gameMatrix[hiderGridChoice][seekerGridChoice];
-
-        hiderScore += getScore;
-        seekerScore -= getScore;
-    if (hiderGridChoice != seekerGridChoice)
-    {
-        humanState = WIN;
-    }
-    else
-    {
+    bool caught = (hiderGridChoice == seekerGridChoice);
+    
+    if (caught) {
+        // Seeker caught the hider
+        
+        if (hideOrSeek) {
+            int catchScore = gameMatrix[hiderGridChoice][seekerGridChoice];
+            // Player is hider, computer is seeker
+            hiderScore -= abs(catchScore);
+            seekerScore += abs(catchScore);
+        } else {
+            int catchScore = gameMatrix[seekerGridChoice][hiderGridChoice];
+            // Player is seeker, computer is hider
+            seekerScore += abs(catchScore);
+            hiderScore -= abs(catchScore);
+        }
         humanState = LOSE;
+    } else {
+        // Seeker missed the hider
+        
+        if (hideOrSeek) {
+            int missScore = gameMatrix[hiderGridChoice][seekerGridChoice];
+            // Player is hider, computer is seeker
+            hiderScore += abs(missScore);
+            seekerScore -= abs(missScore);
+        } else {
+            int missScore = gameMatrix[seekerGridChoice][hiderGridChoice];
+            // Player is seeker, computer is hider
+            hiderScore += abs(missScore);
+            seekerScore -= abs(missScore);
+        }
+        humanState = WIN;
     }
 
     seekerChoiceTurn = true;

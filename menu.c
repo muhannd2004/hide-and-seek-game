@@ -63,15 +63,47 @@ void showFirstMenu(int screenWidth, int screenHeight)
                     if (theWorld) free(theWorld); // free previous if any
                     theWorld = malloc(sizeOfWorld * sizeof(const char*));
                     srand(time(NULL));
-                    for(int i = 0; i < sizeOfWorld; i++){
-                        int r = rand() %3;
-                        theWorld[i] = difficulty[r];
-                    }
+                    difficulty_create(sizeOfWorld, theWorld);
                     
-                    generate_game_matrix(sizeOfWorld, theWorld, gameMatrix, true);
+                    generate_game_matrix(sizeOfWorld, theWorld, gameMatrix, hideOrSeek);
+                    if(hideOrSeek){
+                        // User chose to be a hider
+                        hiderProbs = probability_calculate(sizeOfWorld, gameMatrix);  // Calculate hider strategy
+                        
+                        // Make a transposed version of the matrix for the seeker
+                        int transposedMatrix[MAX_N][MAX_N];
+                        generate_game_matrix(sizeOfWorld, theWorld, transposedMatrix, 0);
+                        
+                        seekerProbs = probability_calculate(sizeOfWorld, transposedMatrix);  // Calculate seeker strategy
+                        
+                    } else {
+                        // User chose to be a seeker
+                        seekerProbs = probability_calculate(sizeOfWorld, gameMatrix);  // Calculate seeker strategy
+                        
+                        // Make a transposed version of the matrix for the hider
+                        int transposedMatrix[MAX_N][MAX_N];
+                        generate_game_matrix(sizeOfWorld, theWorld, transposedMatrix, 1);
+                        
+                        hiderProbs = probability_calculate(sizeOfWorld, transposedMatrix);  // Calculate hider strategy
+                    }
+                                        printf("Game Matrix (JSON format):\n[\n");
+                    for(int i = 0; i < sizeOfWorld; i++) {
+                        printf("  [");
+                        for(int j = 0; j < sizeOfWorld; j++) {
+                            printf("%d", gameMatrix[i][j]);
+                            if (j < sizeOfWorld - 1) {
+                                printf(", ");
+                            }
+                        }
+                        printf("]");
+                        if (i < sizeOfWorld - 1) {
+                            printf(",");
+                        }
+                        printf("\n");
+                    }
+                    printf("]\n");
+                        
 
-                    hiderProbs = hider_probability_calculate(sizeOfWorld, gameMatrix);
-                    seekerProbs = seeker_probability_calculate(sizeOfWorld, gameMatrix);
 
                     guiInit(screenWidth, screenHeight);
                     firstMenu = 0;
@@ -103,15 +135,30 @@ void showFirstMenu(int screenWidth, int screenHeight)
                     if (theWorld) free(theWorld); // free previous if any
                     theWorld = malloc(sizeOfWorld * sizeof(const char*));
                     srand(time(NULL));
-                    for(int i = 0; i < sizeOfWorld; i++){
-                        int r = rand() %3;
-                        theWorld[i] = difficulty[r];
-                    }
+                    difficulty_create(sizeOfWorld, theWorld);
                     
-                    generate_game_matrix(sizeOfWorld, theWorld, gameMatrix, true);
+                    generate_game_matrix(sizeOfWorld, theWorld, gameMatrix, hideOrSeek);
+                    if(hideOrSeek){
+                        // User chose to be a hider
+                        hiderProbs = probability_calculate(sizeOfWorld, gameMatrix);  // Calculate hider strategy
+                        
+                        // Make a transposed version of the matrix for the seeker
+                        int transposedMatrix[MAX_N][MAX_N];
+                        generate_game_matrix(sizeOfWorld, theWorld, transposedMatrix, 0);
+                        
+                        seekerProbs = probability_calculate(sizeOfWorld, transposedMatrix);  // Calculate seeker strategy
+                        
+                    } else {
+                        // User chose to be a seeker
+                        seekerProbs = probability_calculate(sizeOfWorld, gameMatrix);  // Calculate seeker strategy
+                        
+                        // Make a transposed version of the matrix for the hider
+                        int transposedMatrix[MAX_N][MAX_N];
+                        generate_game_matrix(sizeOfWorld, theWorld, transposedMatrix, 1);
+                        
+                        hiderProbs = probability_calculate(sizeOfWorld, transposedMatrix);  // Calculate hider strategy
+                    }
 
-                    hiderProbs = hider_probability_calculate(sizeOfWorld, gameMatrix);
-                    seekerProbs = seeker_probability_calculate(sizeOfWorld, gameMatrix);
 
                     guiInit(screenWidth, screenHeight);
                     firstMenu = 0;

@@ -58,8 +58,8 @@ int log_count = 0;
 
         
 
-        double* seeker_probs = seeker_probability_calculate(N, matrix_hider);
-        double* hider_probs = hider_probability_calculate(N, matrix_hider);
+        double* seeker_probs = probability_calculate(N, matrix_seeker);
+        double* hider_probs = probability_calculate(N, matrix_hider);
 
 
         add_log("Starting %d round simulation...", rounds);
@@ -78,15 +78,15 @@ int log_count = 0;
             seeker_counts[seeker_place]++;
 
             if (hider_place == seeker_place) {
-                seeker_score += matrix_seeker[hider_place][seeker_place];
-                hider_score -= matrix_seeker[hider_place][seeker_place];
-                add_log("Round %3d: H:%d, S:%d - Seeker wins (%+d)", 
-                    round, hider_place, seeker_place, matrix_seeker[hider_place][seeker_place]);
+                seeker_score += matrix_seeker[seeker_place][hider_place];
+                hider_score -= matrix_seeker[seeker_place][hider_place];
+                add_log("Round %3d: H:%d (%s), S:%d (%s) - Seeker wins (%+d)", 
+                    round, hider_place, difficulty[hider_place], seeker_place, difficulty[seeker_place], matrix_seeker[hider_place][seeker_place]);
             } else {
                 hider_score += matrix_hider[hider_place][seeker_place];
                 seeker_score -= matrix_hider[hider_place][seeker_place];
-                add_log("Round %3d: H:%d, S:%d - Hider wins (%+d)", 
-                    round, hider_place, seeker_place, matrix_hider[hider_place][seeker_place]);
+                add_log("Round %3d: H:%d (%s), S:%d (%s) - Hider wins (%+d)", 
+                    round, hider_place, difficulty[hider_place], seeker_place, difficulty[seeker_place], matrix_hider[hider_place][seeker_place]);
             }
         }
         
