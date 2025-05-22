@@ -10,40 +10,211 @@
 
 
 
-void difficulty_create(int N, const char* difficulty[]){
-    // Function to randomly assign difficulty levels
-    const char* levels[] = {"easy", "neutral", "hard"};
-    for (int i = 0; i < N; i++) {
-        // Randomly select one of the three difficulty levels
-        int random_index = rand() % 3;
-        difficulty[i] = levels[random_index];
+void shuffle(const char** array, int N) {
+    // First pass of shuffling
+    for (int i = N - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        const char* temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    
+    // Second pass of shuffling to further randomize and avoid clustering
+    for (int i = N - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        const char* temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
     }
 }
 
+void difficulty_create(int N, const char* difficulty[]) {
+    const char* levels[] = {"easy", "neutral", "hard"};
+    
+    // Handle special cases for small N
+    if (N <= 0) return;
+    
+    if (N == 1) {
+        difficulty[0] = levels[rand() % 3]; // Pick one random difficulty
+        return;
+    }
+    
+    if (N == 2) {
+        difficulty[0] = levels[rand() % 3];
+        difficulty[1] = levels[rand() % 3];
+        return;
+    }
+    
+    // For N >= 3, distribute difficulties evenly
+    int count_per_level = N / 3;
+    int remainder = N % 3;
+    int index = 0;
+    
+    // Distribute the base counts first
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < count_per_level; j++) {
+            difficulty[index++] = levels[i];
+        }
+    }
+    
+    // Distribute the remainder
+    // For example, if N=8, we have 2 "easy", 2 "neutral", 2 "hard", 
+    // and 2 remainders which would go to "easy" and "neutral"
+    for (int i = 0; i < remainder; i++) {
+        difficulty[index++] = levels[((rand() % 3)+1)%3];//reduces number of easy places
+    }
+    
+    // Shuffle the array to randomize placement
+    shuffle(difficulty, N);
+    
+    // Debug: print the distribution
+    int counts[3] = {0};
+    for (int i = 0; i < N; i++) {
+        if (strcmp(difficulty[i], "easy") == 0) counts[0]++;
+        else if (strcmp(difficulty[i], "neutral") == 0) counts[1]++;
+        else if (strcmp(difficulty[i], "hard") == 0) counts[2]++;
+    }
+    printf("Difficulty distribution: easy=%d, neutral=%d, hard=%d\n", 
+           counts[0], counts[1], counts[2]);
+}
+
 void generate_game_matrix(int N, const char* difficulty[], int matrix[MAX_N][MAX_N], bool is_hider) {
-    const int sign[2] = {-1,1};
+int keeper = (int)sqrt(N);
+while (N % keeper != 0) keeper--;
+
+int m = keeper;
+int n = N / keeper;
+
+if (n == 1 || m == 1) {
     for (int h = 0; h < N; h++) {
         for (int s = 0; s < N; s++) {
-            if (h == s) {
-                if (strcmp(difficulty[h], "hard") == 0)
-                    matrix[h][s] = -3 * sign[is_hider];
-                else if (strcmp(difficulty[h], "neutral") == 0)
-                    matrix[h][s] = -1 * sign[is_hider];
-                else if (strcmp(difficulty[h], "easy") == 0)
-                    matrix[h][s] = -1 * sign[is_hider];
-            } else {
-                if (strcmp(difficulty[h], "hard") == 0)
-                    matrix[h][s] = 1 * sign[is_hider];
-                else if (strcmp(difficulty[h], "neutral") == 0)
-                    matrix[h][s] = 1 * sign[is_hider];
-                else if (strcmp(difficulty[h], "easy") == 0)
-                    matrix[h][s] = 2 * sign[is_hider];
+            int dist = abs(h - s);
+            int base = 0;
+
+            if (strcmp(difficulty[h], "hard") == 0) {
+                if (dist == 0)
+                    base = -12;
+                else if (dist == 1)
+                    base = 2;
+                else if (dist == 2)
+                    base = 3;
+                else
+                    base = 4;
+            } else if (strcmp(difficulty[h], "neutral") == 0) {
+                if (dist == 0)
+                    base = -4;
+                else if (dist == 1)
+                    base = 2;
+                else if (dist == 2)
+                    base = 3;
+                else
+                    base = 4;
+            } else { // "easy"
+                if (dist == 0)
+                    base = -4; 
+                else if (dist == 1)
+                    base = 4;
+                else if (dist == 2)
+                    base = 6;
+                else
+                    base = 8;
+            }
+
+            // Flip sign if computing from seeker's perspective
+            if (!is_hider) base *= -1;
+
+            matrix[h][s] = base;
+        }
+    }
+    if (!is_hider) {
+            for (int h = 0; h < N; h++) {
+                for (int s = h + 1; s < N; s++) {
+                    int temp = matrix[h][s];
+                    matrix[h][s] = matrix[s][h];
+                    matrix[s][h] = temp;
+                }
+            }
+        }
+
+
+    }else{
+        const int sign[2] = {-1,1};
+        for (int h = 0; h < N; h++) {
+            for (int s = 0; s < N; s++) {
+                if (h == s) {
+                    if (strcmp(difficulty[h], "hard") == 0)
+                        matrix[h][s] = -3 * sign[is_hider];
+                    else if (strcmp(difficulty[h], "neutral") == 0)
+                        matrix[h][s] = -1 * sign[is_hider];
+                    else if (strcmp(difficulty[h], "easy") == 0)
+                        matrix[h][s] = -1 * sign[is_hider];
+                } else {
+                    if (strcmp(difficulty[h], "hard") == 0)
+                        matrix[h][s] = 1 * sign[is_hider];
+                    else if (strcmp(difficulty[h], "neutral") == 0)
+                        matrix[h][s] = 1 * sign[is_hider];
+                    else if (strcmp(difficulty[h], "easy") == 0)
+                        matrix[h][s] = 2 * sign[is_hider];
+                }
+            }
+        }
+        if (!is_hider) {
+            for (int h = 0; h < N; h++) {
+                for (int s = h + 1; s < N; s++) {
+                    int temp = matrix[h][s];
+                    matrix[h][s] = matrix[s][h];
+                    matrix[s][h] = temp;
+                }
             }
         }
     }
 }
 
-double* seeker_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
+// void generate_game_matrix(int N, const char* difficulty[], int matrix[MAX_N][MAX_N], bool is_hider) {
+//     const int sign[2] = {-1, 1};
+
+//     // Derive n x m grid from N
+//     int keeper = (int)sqrt(N);
+//     while (N % keeper != 0) keeper--;
+
+//     int m= keeper;
+//     int n= N/keeper;
+
+//     for (int h = 0; h < N; h++) {
+//         int hi = h / m, hj = h % m;
+//         for (int s = 0; s < N; s++) {
+//             int si = s / m, sj = s % m;
+//             int dist = abs(hi - si) + abs(hj - sj);
+
+//             int base;
+//             if (h == s) {
+//                 // Scaled base payoffs (multiplied by 4)
+//                 if      (strcmp(difficulty[h], "hard")    == 0) base = -12 * sign[is_hider];
+//                 else if (strcmp(difficulty[h], "neutral") == 0) base = -4 * sign[is_hider];
+//                 else                                           base = -4 * sign[is_hider];
+//             } else {
+//                 if      (strcmp(difficulty[h], "hard")    == 0) base =  4 * sign[is_hider];
+//                 else if (strcmp(difficulty[h], "neutral") == 0) base =  4 * sign[is_hider];
+//                 else                                           base =  8 * sign[is_hider];
+//             }
+
+//             // Apply distance penalty
+//             if (dist == 1) {
+//                 base = (base * 3) / 4;  // 0.75
+//             } else if (dist == 2) {
+//                 base = base / 2;       // 0.5
+//             } else if (dist > 2) {
+//                 base = 0;              // Beyond 2 tiles, no reward or penalty
+//             }
+
+//             matrix[h][s] = base;
+//         }
+//     }
+// }
+
+
+
+double* probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     glp_prob *lp;
     lp = glp_create_prob();
     glp_set_obj_dir(lp, GLP_MAX);
@@ -118,14 +289,13 @@ double* seeker_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     printf("Strategy probabilities:\n");
     for (int i = 1; i <= N; i++) {
         probabilities[i - 1] = glp_get_col_prim(lp, i);
-        printf("Place %d: %.3f\n", i - 1, probabilities[i - 1]);
     }
 
     glp_delete_prob(lp);
     return probabilities;
 }
 
-double* hider_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
+double* dual_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     glp_prob *lp = glp_create_prob();
     glp_set_obj_dir(lp, GLP_MIN); // Seeker minimizes game value
 
@@ -175,7 +345,7 @@ double* hider_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
         exit(1);
     }
     double v = glp_get_obj_val(lp);
-    printf("\nOptimal game value for the hider: %f\n", v);
+
 
     double* probabilities = malloc(N * sizeof(double));
     if (probabilities == NULL) {
@@ -186,7 +356,6 @@ double* hider_probability_calculate(int N, int matrix[MAX_N][MAX_N]) {
     printf("Strategy probabilities:\n");
     for (int j = 1; j <= N; j++) {
         probabilities[j - 1] = glp_get_col_prim(lp, j);
-        printf("Place %d: %.3f\n", j - 1, probabilities[j - 1]);
     }
 
     glp_delete_prob(lp);
