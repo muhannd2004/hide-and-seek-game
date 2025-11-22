@@ -19,7 +19,6 @@ An interactive 3D game demonstrating Nash equilibrium and optimal mixed-strategy
 - **🎮 Interactive 3D Gameplay**: Smooth skeletal animations with 5 character states (idle, running, hiding, winning, losing)
 - **🤖 Optimal AI**: Implements Nash equilibrium using GLPK Simplex solver for mathematically proven optimal play
 - **📊 Real-Time Visualization**: Dual-scrolling stats panel supporting up to 100×100 matrices with color-coded terrain indicators
-- **🎵 Audio Integration**: Background music with play/pause controls
 - **📈 Simulation Mode**: Run 100-round simulations with detailed probability tracking and statistical analysis
 - **🎯 Adaptive Terrain**: Dynamic difficulty system (easy, neutral, hard) with proximity-based scoring
 
