@@ -390,3 +390,60 @@ int computer_turn(int N, double* probabilities) {
     return N - 1;
 }
 
+
+
+
+// void append_score_to_file(const char* filename, int score) {
+//     FILE *file = fopen(filename, "a");
+//     if (file) {
+//         fprintf(file, "%d\n", score);
+//         fclose(file);
+//     }
+// }
+
+// int main() {
+//     srand(time(NULL));
+//     const int rounds = 100;
+//     int grid_sizes[] = {4, 9, 16, 44};
+//     int num_sizes = sizeof(grid_sizes) / sizeof(grid_sizes[0]);
+
+//     for (int gi = 0; gi < num_sizes; gi++) {
+//         int N = grid_sizes[gi];
+//         char filename[64];
+//         sprintf(filename, "scores_%d.txt", N);
+//         FILE* f = fopen(filename, "w"); if (f) fclose(f); // clear file
+
+//         int total_hider_score = 0;
+//         int total_seeker_score = 0;
+
+//         for (int r = 0; r < rounds; r++) {
+//             const char* difficulty[MAX_N];
+//             int matrix[MAX_N][MAX_N];
+//             difficulty_create(N, difficulty);
+//             generate_game_matrix(N, difficulty, matrix, true); // Hider's view
+
+//             double* prob = probability_calculate(N, matrix);
+//             int seeker_choice = rand() % N;
+//             int hider_choice = computer_turn(N, prob);
+
+//             int hider_score = matrix[hider_choice][seeker_choice];
+//             int seeker_score = -hider_score;
+
+//             total_hider_score += hider_score;
+//             total_seeker_score += seeker_score;
+
+//             append_score_to_file(filename, total_hider_score);
+//             free(prob);
+//         }
+
+//         printf("=== Grid Size %d ===\n", N);
+//         printf("Total Hider Score: %d\n", total_hider_score);
+//         printf("Total Seeker Score: %d\n", total_seeker_score);
+//         printf("Sum Check (should be 0): %d\n\n", total_hider_score + total_seeker_score);
+//     }
+
+//     // Automatically call the Python plot (optional)
+//     system("python3 statistics.py");
+
+//     return 0;
+// }
